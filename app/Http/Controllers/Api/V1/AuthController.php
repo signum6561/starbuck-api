@@ -93,9 +93,6 @@ class AuthController extends Controller
     public function logout()
     {
         try {
-            if (!auth()->user()) {
-                return response()->json(['message' => 'Unauthenticated'], 401);
-            }
             JWTAuth::invalidate(JWTAuth::getToken());
             return response()->json([
                 'message' => 'User successfully logout',
@@ -109,11 +106,7 @@ class AuthController extends Controller
 
     public function getUser()
     {
-        $user = auth()->user();
-        if (!$user) {
-            return response()->json(['message' => 'Unauthenticated'], 401);
-        }
-        return response()->json(['message' => 'Get user data successfully', 'data' => $user]);
+        return response()->json(auth()->user());
     }
 
     public function refresh()
@@ -131,7 +124,9 @@ class AuthController extends Controller
             }
 
             $newRefreshToken = $this->createRefreshToken();
-            JWTAuth::invalidate(JWTAuth::getToken());
+            if (auth()->check()) {
+                JWTAuth::invalidate(JWTAuth::getToken());
+            }
             $newToken = auth()->login($user);
             return $this->respondWithToken($newToken, $newRefreshToken);
         } catch (JWTException $e) {
