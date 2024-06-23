@@ -11,7 +11,7 @@ Route::group(['prefix' => 'auth', 'middleware' => 'auth:api'], function () {
     Route::post('register', [AuthController::class, 'register'])->withoutMiddleware('auth:api');
     Route::post('login', [AuthController::class, 'login'])->withoutMiddleware('auth:api');
     Route::post('logout', [AuthController::class, 'logout']);
-    Route::post('refresh', [AuthController::class, 'refresh']);
+    Route::post('refresh', [AuthController::class, 'refresh'])->withoutMiddleware('auth:api');
 });
 
 Route::group(['prefix' => 'v1', 'namespace' => 'App\Http\Controllers\Api\V1', 'middleware' => 'auth:api'], function () {

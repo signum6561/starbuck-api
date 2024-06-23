@@ -8,19 +8,6 @@ use App\Services\Query;
 
 class CustomerQuery extends Query
 {
-    protected $safeParms = [
-        'fullname' => ['eq'],
-        'email' => ['eq'],
-        'address' => ['eq'],
-        'birthday' => ['eq'],
-        'starPoints' => ['eq', 'gt', 'lt', 'gte', 'lte'],
-        'type' => ['eq'],
-    ];
-
-    protected $columnMap = [
-        'starPoints' => 'star_points'
-    ];
-
 
     public function transform(Request $request)
     {

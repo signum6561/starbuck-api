@@ -81,7 +81,7 @@ class AuthController extends Controller
                 return response()->json(['message' => 'Unauthenticated'], 401);
             }
 
-            $refreshToken = $this->createRefreshToken();
+            $refreshToken = $this->createRefreshToken(auth()->id());
             return $this->respondWithToken($token, $refreshToken);
         } catch (\Throwable $th) {
             return response()->json([
@@ -106,7 +106,7 @@ class AuthController extends Controller
 
     public function getUser()
     {
-        return response()->json(auth()->user());
+        return response()->json(['message'=> 'Get User Data Successfully', 'data' => auth()->user()], 200);
     }
 
     public function refresh()
@@ -114,6 +114,7 @@ class AuthController extends Controller
         try {
             $refreshToken = request()->refresh_token;
             $decoded = JWTAuth::getJWTProvider()->decode($refreshToken);
+
             if (time() >= $decoded['exp']) {
                 return response()->json(['message' => 'Refresh Token expired'], 401);
             }
@@ -123,7 +124,7 @@ class AuthController extends Controller
                 return response()->json(['message' => 'Invalid Refresh Token'], 404);
             }
 
-            $newRefreshToken = $this->createRefreshToken();
+            $newRefreshToken = $this->createRefreshToken($decoded['sub']);
             if (auth()->check()) {
                 JWTAuth::invalidate(JWTAuth::getToken());
             }
@@ -144,14 +145,14 @@ class AuthController extends Controller
         ]);
     }
 
-    private function createRefreshToken()
+    private function createRefreshToken($id)
     {
         $data = [
-            'sub' => auth()->user()->id,
+            'sub' => $id,
             'jti' => rand() . time(),
             'exp' => time() + config('jwt.refresh_ttl')
         ];
-        auth()->user()->update(['refresh_token' => $data['jti']]);
+        User::find($id)->update(['refresh_token' => $data['jti']]);
         return JWTAuth::getJWTProvider()->encode($data);
     }
 }

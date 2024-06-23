@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('id')->primary();
             $table->string('customer_id');
             $table->string('store_id');
-            $table->foreign('customer_id')->references('id')->on('customers');
+            $table->foreign('customer_id')->references('id')->on('customers')->onDelete('cascade');;
             $table->dateTime('billed_date');
             $table->decimal('total_cost');
             $table->timestamps();

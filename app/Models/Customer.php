@@ -35,6 +35,7 @@ class Customer extends Model
         'email',
         'birthday',
         'star_points' => 'starPoints',
+        'created_at' => 'createdAt'
     ];
 
     public function invoices()
