@@ -1,23 +1,37 @@
-# Base image for PHP environment
-FROM php:8.3 as php
+FROM composer:2 as vendor
 
-# Install dependencies
-ENV ACCEPT_EULA=Y
-RUN apt-get update && apt-get install -y gnupg2
-RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
-RUN curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list > /etc/apt/sources.list.d/mssql-release.list
-RUN apt-get update
-RUN ACCEPT_EULA=Y apt-get -y --no-install-recommends install msodbcsql17 unixodbc-dev
-RUN pecl install sqlsrv
-RUN pecl install pdo_sqlsrv
-RUN docker-php-ext-enable sqlsrv pdo_sqlsrv
+WORKDIR /var/www
+COPY composer.json composer.lock* ./
+RUN composer update --no-dev --optimize-autoloader --no-interaction --no-scripts
 
-# Create app directory
+FROM php:8.3-fpm-alpine
+
 WORKDIR /var/www
 
-# Copy project files
+RUN apk add --no-cache \
+    oniguruma-dev \
+    sqlite-dev \
+    libxml2-dev \
+    libpng-dev \
+    freetype-dev \
+    libjpeg-turbo-dev \
+    && docker-php-ext-install \
+        pdo \
+        pdo_sqlite \
+        pcntl \
+        xml \
+        gd \
+    && rm -rf /var/cache/apk/*
+
+COPY --from=vendor /var/www/vendor ./vendor
+
 COPY . .
 
-COPY --from=composer:2.3.5 /usr/bin/composer /usr/bin/composer
+RUN echo "APP_KEY=" > .env && php artisan key:generate --force
+RUN php artisan jwt:secret --force
+RUN php artisan migrate --force
+RUN touch /var/www/database/database.sqlite
 
-ENTRYPOINT [ "./entrypoint.sh" ]
+EXPOSE 8080
+
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8080"]
